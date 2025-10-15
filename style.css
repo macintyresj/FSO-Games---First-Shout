@@ -1,0 +1,100 @@
+:root{
+  --bg:#071126;
+  --panel:#0f1724;
+  --accent:#ffca2c;
+  --muted:#9aa4b2;
+  --accent-2:#ff6b6b;
+  --font:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(800px 300px at 10% 10%, rgba(255,202,44,0.04), transparent),
+    linear-gradient(180deg,#071126 0%, #031025 100%);
+  color:#e6eef8;
+  font-family:var(--font);
+  padding:20px;
+}
+
+.container{
+  max-width:1100px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+/* Topbar */
+.topbar{
+  display:flex; justify-content:space-between; align-items:center;
+}
+.title{ font-weight:800; color:var(--accent); font-size:20px; letter-spacing:0.6px; text-shadow:0 6px 18px rgba(0,0,0,0.6) }
+.controls .btn{ margin-left:8px }
+
+/* Layout */
+.main-grid{
+  display:grid;
+  grid-template-columns: 1fr 320px;
+  gap:18px;
+  align-items:start;
+}
+
+/* Stage */
+.stage .question-card{
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.12));
+  padding:18px; border-radius:12px; border:1px solid rgba(255,255,255,0.03);
+}
+.question-card h2{ margin:0 0 12px 0; font-size:18px; font-weight:800; color:#fff }
+.question-actions{ display:flex; gap:8px; align-items:center; }
+
+/* Card */
+.card{
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.14));
+  padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.03);
+  margin-top:12px;
+}
+.card-title{ font-weight:800; color:var(--accent); margin-bottom:8px }
+.card-body{ color:var(--muted); min-height:40px }
+
+/* Scoreboard */
+.score-list{ display:flex; flex-direction:column; gap:8px }
+.score-item{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px; border-radius:8px; background:linear-gradient(90deg, rgba(0,0,0,0.18), rgba(255,255,255,0.01));
+}
+.score-left{ display:flex; align-items:center; gap:10px }
+.team-pill{ width:56px; height:56px; border-radius:50%; display:grid; place-items:center; font-weight:900; color:#fff; font-size:18px; box-shadow:0 8px 18px rgba(0,0,0,0.6) }
+.team-label{ font-weight:700 }
+.team-sub{ color:var(--muted); font-size:12px }
+
+/* Colors for teams */
+.team-0{ background: linear-gradient(180deg,#2c7be5,#0646a6); }
+.team-1{ background: linear-gradient(180deg,#ff6b6b,#a81a1a); }
+.team-2{ background: linear-gradient(180deg,#3ddc84,#0a8a4f); color:#012; }
+.team-3{ background: linear-gradient(180deg,#c08cff,#6b2fb8); }
+
+.question-img{ max-width:100%; border-radius:8px; margin-bottom:12px; }
+
+/* Buttons */
+.btn{
+  background:transparent; border:1px solid rgba(255,255,255,0.06);
+  padding:10px 14px; color:var(--accent); border-radius:10px; cursor:pointer; font-weight:800;
+}
+.btn.small{ padding:6px 8px; font-size:13px }
+.btn.primary{ background:linear-gradient(180deg,#111827,#0b1220); color:#fff; border:none; box-shadow:0 8px 22px rgba(0,0,0,0.6); }
+.btn.ghost{ background:transparent; color:var(--muted) }
+
+/* small text */
+.small-muted{ color:var(--muted); font-size:13px }
+
+/* Footer */
+.footer{ text-align:center; color:var(--muted); margin-top:6px; font-size:13px }
+
+/* Responsive */
+@media (max-width:920px){
+  .main-grid{ grid-template-columns: 1fr; }
+  .sidebar{ order:2 }
+}

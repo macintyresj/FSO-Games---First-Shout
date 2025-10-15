@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FSO Games — Quiz Arena</title>
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+
+  <!-- Estilo por defecto: family-feud style. 
+       Para probar el minimal, abrí este archivo y cambiá la ruta a styles.css -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <div class="title">FSO Games — Quiz Arena</div>
+      <div class="controls">
+        <button id="restartBtn" class="btn small">Reiniciar juego</button>
+      </div>
+    </header>
+
+    <main class="main-grid">
+      <section class="stage">
+        <div class="question-card">
+          <h2 id="currentQuestionLabel">Presioná "Siguiente pregunta" para comenzar</h2>
+          <div class="question-actions">
+            <button id="nextQuestionBtn" class="btn primary">Siguiente pregunta</button>
+            <button id="showUsedQBtn" class="btn ghost">Preguntas usadas</button>
+          </div>
+        </div>
+
+        <div class="last-action card">
+          <div class="card-title">Última acción</div>
+          <div id="lastAction" class="card-body">—</div>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <div class="scoreboard card">
+          <div class="card-title">Marcador</div>
+          <div id="scoreboard" class="score-list"></div>
+        </div>
+
+        <div class="info card">
+          <div class="card-title">Controles</div>
+          <div class="card-body small-muted">
+            El moderador decide si la respuesta de un equipo fue correcta o incorrecta usando el diálogo que aparece al tocar el botón del equipo.
+          </div>
+          <div class="card-actions">
+            <button id="showLastAnswerBtn" class="btn small">Ver última respuesta</button>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <small>Interfaz en español · SweetAlert2 · Preguntas con imágenes soportadas</small>
+    </footer>
+  </div>
+
+  <!-- questions.js -->
+  <script src="questions.js"></script>
+
+  <!-- script principal -->
+  <script src="script.js"></script>
+</body>
+</html>
