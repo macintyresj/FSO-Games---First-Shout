@@ -1,227 +1,376 @@
-// --- Estado ---
-let numTeams = 0;
-let teams = []; // {name, score, colorClass}
-let availableQuestions = [];
-let usedQuestions = [];
+// ----------------- Estado global -----------------
+let teams = [];                // {name, score, colorClass}
+let availableQuestions = [];   // preguntas no usadas aún
+let usedQuestions = [];        // preguntas ya mostradas
 let lastQuestion = null;
-let lastAnswerShown = null;
-const teamColorClasses = ['team-0','team-1','team-2','team-3'];
 
-// --- Utilidades ---
-function shuffleArray(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} }
+let totalQuestions = 5;
+let questionsAsked = 0;
+let gamePaused = false;
 
-function updateScoreboard(){
-  const board = document.getElementById('scoreboard'); board.innerHTML='';
-  teams.forEach((t,idx)=>{
-    const div = document.createElement('div'); div.className='score-item';
-    div.innerHTML = `
-      <div class="d-flex align-items-center">
-        <div class="score-color ${teamColorClasses[idx]}" style="width:18px;height:18px;border-radius:4px;margin-right:8px"></div>
-        <div>
-          <div style="font-weight:900">${t.name}</div>
-          <div class="small-muted">Team ${idx+1}</div>
-        </div>
-      </div>
-      <div style="font-size:1.1rem">${t.score}</div>
-    `;
-    board.appendChild(div);
-  });
-}
+// ----------------- Utilidades -----------------
+function shuffleArray(a){ for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
 
-// --- Configuración de equipos ---
-async function askNumberOfTeams(){
-  await Swal.fire({
-    title:'¿Cuántos equipos participan?',
-    showCancelButton:false, allowOutsideClick:false,
-    html: `<div class="d-flex gap-2 justify-content-center">
-             <button class="swal2-confirm btn-team-select" data-n="2" style="margin:6px;padding:8px 16px">2</button>
-             <button class="swal2-confirm btn-team-select" data-n="3" style="margin:6px;padding:8px 16px">3</button>
-             <button class="swal2-confirm btn-team-select" data-n="4" style="margin:6px;padding:8px 16px">4</button>
-           </div>`,
-    didOpen: ()=>{
-      document.querySelectorAll('.btn-team-select').forEach(b=>{
-        b.addEventListener('click', e=>{
-          const n = parseInt(e.currentTarget.dataset.n,10);
-          Swal.close();
-          setTimeout(()=> promptTeamNames(n), 160);
-        });
-      });
+// ----------------- Arcade / inicio -----------------
+let selectedColors = new Set();
+
+document.querySelectorAll('.arcade-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const color = btn.dataset.color;
+    if(selectedColors.has(color)){
+      selectedColors.delete(color);
+      btn.classList.remove('selected');
+    } else {
+      selectedColors.add(color);
+      btn.classList.add('selected');
     }
   });
-}
+});
 
-async function promptTeamNames(n){
-  numTeams = n; teams = [];
-  for(let i=0;i<n;i++){
-    const { value: name } = await Swal.fire({
-      title:`Nombre del equipo ${i+1}`,
-      input:'text', inputLabel:`Escribí el nombre del equipo ${i+1}`, inputPlaceholder:`Equipo ${i+1}`, inputValue:`Team ${i+1}`, allowOutsideClick:false, showCancelButton:false
-    });
-    teams.push({ name: name ? name.trim() : `Team ${i+1}`, score:0, colorClass: teamColorClasses[i] });
+document.getElementById('startGameBtn').addEventListener('click', ()=>{
+  const n = parseInt(document.getElementById('questionCountInput').value,10) || 5;
+  totalQuestions = Math.max(1, n);
+  document.getElementById('totalCount').innerText = totalQuestions;
+
+  if(selectedColors.size < 2){
+    Swal.fire({ icon:'warning', title:'Seleccioná al menos 2 equipos', toast:true, timer:1500, showConfirmButton:false });
+    return;
   }
+
+  teams = Array.from(selectedColors).map(color=>{
+    const name = color.replace('--team-','').toUpperCase();
+    return { name, score:0, colorClass: color };
+  });
+
+  // ocultar pantalla arcade y mostrar juego
+  document.getElementById('arcadeScreen').style.display = 'none';
+  document.getElementById('gameContainer').style.display = 'block';
+
   initializeQuestions();
   updateScoreboard();
-  document.getElementById('nextQuestionBtn').disabled = false;
-  Swal.fire({ icon:'success', title:'Equipos listos', timer:900, showConfirmButton:false });
-}
+  showNextQuestion(); // arranca
+});
 
-// --- Preguntas ---
+// Botón continuar tras pausa
+document.getElementById('continueBtn').addEventListener('click', ()=>{
+  gamePaused = false;
+  document.getElementById('continueBtn').style.display = 'none';
+  // seguir con la misma pregunta (si lastQuestion existe, mostrar modal otra vez)
+  if(lastQuestion) {
+    // forzar re-mostrar la misma pregunta con su estado actual
+    showQuestionModal(lastQuestion, lastQuestionState.failedTeams, lastQuestionState.disabledOptionIdxs);
+  } else {
+    showNextQuestion();
+  }
+});
+
+// Reiniciar
+document.getElementById('restartBtn').addEventListener('click', ()=> location.reload());
+
+// ----------------- Preguntas: init y pick -----------------
 function initializeQuestions(){
   availableQuestions = Array.isArray(questions) ? [...questions] : [];
   shuffleArray(availableQuestions);
   usedQuestions = [];
   lastQuestion = null;
-  lastAnswerShown = null;
-  document.getElementById('lastAction').innerText = 'Juego listo. Presioná Siguiente pregunta.';
+  questionsAsked = 0;
+  document.getElementById('askedCount').innerText = questionsAsked;
+  document.getElementById('totalCount').innerText = totalQuestions;
+  document.getElementById('lastAction').innerText = 'Juego listo';
+  renderEmptyQuestionCard();
 }
 
 function pickQuestion(){
-  if ((!availableQuestions || availableQuestions.length===0) && (!usedQuestions || usedQuestions.length===0)) {
-    Swal.fire({ icon:'info', title:'No hay preguntas', text:'Agregá preguntas en el array.' });
-    return null;
-  }
-  if (availableQuestions.length === 0){
-    availableQuestions = [...usedQuestions];
-    usedQuestions = [];
-    shuffleArray(availableQuestions);
-  }
+  if(availableQuestions.length === 0) return null;
   const q = availableQuestions.shift();
   usedQuestions.push(q);
   lastQuestion = q;
   return q;
 }
 
-// --- Modal de pregunta ---
-function buildQuestionHtml(q, { optionsShown=false, failedTeams=[], activeTeam=null } = {}){
-  const imgHtml = q.image ? `<div style="text-align:center"><img src="${q.image}" class="question-img" alt="Imagen pregunta"></div>` : '';
-
-  const teamButtonsHtml = teams.map((t, idx) => {
-    let disabled = '';
-    let btnStyle = '';
-    if(failedTeams.includes(idx)) { 
-      disabled = 'disabled';
-      btnStyle = 'opacity:0.4;cursor:not-allowed;';
-    } else if(activeTeam !== null && activeTeam !== idx){
-      disabled = 'disabled';
-      btnStyle = 'opacity:0.5;';
-    }
-    return `
-      <div style="display:inline-block;margin:8px;text-align:center">
-        <div class="team-btn ${t.colorClass}" data-team="${idx}" data-team-name="${t.name}" role="button" style="${btnStyle} ${disabled ? 'pointer-events:none;' : ''}">${idx+1}</div>
-        <div class="team-label">${t.name}</div>
-      </div>
-    `;
-  }).join('');
-
-  let optionsHtml = '';
-  if(optionsShown){
-    optionsHtml = `<div style="margin-top:12px;text-align:center">${q.options.map((op,i)=>`<div class="points-badge mb-1" style="display:block">${String.fromCharCode(65+i)}. ${op}</div>`).join('')}</div>
-                   <div class="small-muted mt-2">Valor: <span class="points-badge">${q.points} pts</span></div>`;
-  } else {
-    optionsHtml = `<div class="small-muted mt-2">Vale <span class="points-badge">${q.points} pts</span> — <strong>x2</strong> si responden sin opciones</div>`;
-  }
-
-  return `
-    <div style="text-align:center;padding:8px">
-      ${imgHtml}
-      <div style="font-size:1.05rem;font-weight:800;margin-bottom:8px">${q.question}</div>
-      <div style="margin:12px 0">${teamButtonsHtml}</div>
-      <div style="margin-top:8px">
-        <button id="showOptionsBtn" class="swal2-styled" style="background:#222;border:1px solid rgba(255,255,255,0.06;padding:8px 12px;margin-right:8px">Mostrar opciones</button>
-        <button id="showAnswerBtn" class="swal2-styled" style="background:#111;border:1px solid rgba(255,255,255,0.06;padding:8px 12px">Mostrar respuesta</button>
-      </div>
-      <div id="optionsArea">${optionsHtml}</div>
-    </div>
-  `;
+function renderEmptyQuestionCard(){
+  document.getElementById('questionText').innerText = 'Presioná START para comenzar';
+  document.getElementById('optionsArea').innerHTML = '';
 }
 
-async function showQuestionModal(q, { optionsShown=false, failedTeams=[] } = {}){
-  if (!q) return;
+// ----------------- Marcador -----------------
+function updateScoreboard(){
+  const board = document.getElementById('scoreboard');
+  board.innerHTML = '';
+  teams.forEach((t, idx)=>{
+    const div = document.createElement('div');
+    div.className = 'score-item';
+    div.innerHTML = `
+      <div class="d-flex align-items-center">
+        <div class="color-box" style="background: var(${t.colorClass})"></div>
+        <div style="font-weight:700">${t.name}</div>
+      </div>
+      <div style="font-weight:800">${t.score}</div>
+    `;
+    board.appendChild(div);
+  });
+}
 
-  const html = buildQuestionHtml(q, { optionsShown, failedTeams, activeTeam:null });
-  await Swal.fire({
-    title: `Pregunta (vale ${q.points} pts)`,
-    html,
-    width:900,
-    showConfirmButton:false,
-    allowOutsideClick:false,
-    didOpen: ()=>{
-      const modalDom = Swal.getHtmlContainer();
+// ----------------- Estado por pregunta (para reabrir) ---------------
+// guardamos el estado actual de la pregunta mostrada para poder reabrir la misma si se pausa
+let lastQuestionState = null; // { questionObj, failedTeams:[], disabledOptionIdxs:Set(), activeTeam: number|null }
 
-      modalDom.querySelectorAll('.team-btn').forEach(btn=>{
-        btn.addEventListener('click', async (e)=>{
-          const teamIdx = parseInt(btn.dataset.team,10);
-          if(failedTeams.includes(teamIdx)) return;
+// ----------------- Flujo principal: mostrar siguiente pregunta -----------------
+async function showNextQuestion(){
+  if(gamePaused) return;
 
-          // Reabrir modal con este equipo activo y grayout para los demás
-          const activeTeam = teamIdx;
-          Swal.close();
-          setTimeout(()=> showTeamAnswer(q, activeTeam, optionsShown, failedTeams), 150);
+  if(questionsAsked >= totalQuestions){
+    await Swal.fire({
+      icon:'info',
+      title:'Ronda finalizada',
+      html:`Se mostraron ${questionsAsked} preguntas.`,
+      confirmButtonText:'Aceptar'
+    });
+    return;
+  }
+
+  const q = pickQuestion();
+  if(!q){
+    await Swal.fire({ icon:'info', title:'No quedan preguntas', text:'Se terminó el juego.' });
+    return;
+  }
+
+  questionsAsked++;
+  document.getElementById('askedCount').innerText = questionsAsked;
+
+  // estado inicial de la pregunta
+  const state = {
+    questionObj: q,
+    failedTeams: [],         // indices de equipos que ya fallaron en esta pregunta
+    disabledOptionIdxs: new Set(), // indices de opciones que ya fueron elegidas incorrectas
+    activeTeam: null
+  };
+  lastQuestionState = state;
+  lastQuestion = q;
+
+  // render en pantalla principal (solo visual, opciones inactivas inicialmente)
+  renderQuestionCard(q, state.disabledOptionIdxs);
+
+  // abrir modal (Swal) con estado inicial: opciones deshabilitadas, botones de equipos disponibles
+  await showQuestionModal(q, state.failedTeams, state.disabledOptionIdxs);
+}
+
+// ----------------- Render visual en la pantalla principal -----------------
+function renderQuestionCard(q, disabledOptionIdxs){
+  document.getElementById('questionText').innerText = q.question || '—';
+  const optionsArea = document.getElementById('optionsArea');
+  optionsArea.innerHTML = q.options.map((opt, i)=>{
+    const cls = disabledOptionIdxs && disabledOptionIdxs.has(i) ? 'option-badge disabled' : 'option-badge';
+    return `<div class="${cls}" data-idx="${i}">${String.fromCharCode(65+i)}. ${opt}</div>`;
+  }).join('');
+}
+
+// ----------------- Modal que muestra pregunta y permite seleccionar equipo -----------------
+/*
+  Parámetros:
+    q - la pregunta (obj)
+    failedTeams - array de índices que ya fallaron
+    disabledOptionIdxs - Set con índices de opciones ya usadas e incorrectas
+*/
+async function showQuestionModal(q, failedTeams = [], disabledOptionIdxs = new Set()){
+  if(gamePaused) return;
+
+  // actualizamos la vista principal también
+  renderQuestionCard(q, disabledOptionIdxs);
+
+  // lista de equipos que todavía pueden intentar
+  const remainingTeams = teams.map((_, i) => i).filter(i => !failedTeams.includes(i));
+
+  // build HTML para swal: pregunta + opciones (como bloques, pero desactivados) + area de botones de equipos (si hay >1)
+  const optionsHtml = q.options.map((o, i) => {
+    const disabled = disabledOptionIdxs.has(i) ? 'disabled' : '';
+    return `<div class="swal-option ${disabled}" data-idx="${i}" style="background:#f3f4f6;color:#111">${String.fromCharCode(65+i)}. ${o}</div>`;
+  }).join('');
+
+  // si solo queda un equipo, no mostramos selector de equipos (se habilitan opciones directamente)
+  const showTeamButtons = remainingTeams.length > 1;
+
+  const teamButtonsHtml = showTeamButtons
+    ? remainingTeams.map(i => {
+        return `<button class="swal-team" data-team="${i}" style="background: var(${teams[i].colorClass})">${teams[i].name}</button>`;
+      }).join('')
+    : `<div class="small text-muted">Último equipo restante: <strong>${teams[remainingTeams[0]].name}</strong></div>`;
+
+  // Guardamos el estado actual para poder reabrir/referenciar
+  lastQuestionState = { questionObj: q, failedTeams: [...failedTeams], disabledOptionIdxs: new Set([...disabledOptionIdxs]), activeTeam: null };
+
+  // Construimos el modal
+  const swalHtml = `
+    <div style="text-align:left">
+      <div style="font-weight:800;margin-bottom:12px">${escapeHtml(q.question)}</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">${optionsHtml}</div>
+      <div style="margin-top:16px">${teamButtonsHtml}</div>
+      <div class="mt-3 small text-muted">El moderador selecciona el equipo que levantó la mano. Después selecciona la opción que dijeron.</div>
+    </div>
+  `;
+
+  const swalResult = await Swal.fire({
+    title: `Pregunta (${q.points} pts)`,
+    html: swalHtml,
+    width: 900,
+    showConfirmButton: false,
+    allowOutsideClick: false,
+    showCloseButton: true,     // la X para pausar
+    willClose: () => {
+      // si el moderador cierra con la X, pausamos el juego y mostramos continuar
+      gamePaused = true;
+      document.getElementById('continueBtn').style.display = 'inline-block';
+    },
+    didOpen: () => {
+      const container = Swal.getHtmlContainer();
+
+      // referenciamos elementos dentro del modal
+      const optionEls = container.querySelectorAll('.swal-option');
+      const teamEls = container.querySelectorAll('.swal-team');
+
+      // inicialmente las opciones deben estar INACTIVAS (moderador las habilita cuando elige equipo)
+      optionEls.forEach(el => {
+        el.classList.add('disabled');
+      });
+
+      // CLICK en equipo -> activa opciones para ese equipo y desactiva otros equipos
+      teamEls.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const teamIdx = parseInt(btn.dataset.team, 10);
+          // actualizamos estado
+          lastQuestionState.activeTeam = teamIdx;
+
+          // marcar visualmente el equipo activo (resaltar)
+          teamEls.forEach(t => t.classList.toggle('disabled', parseInt(t.dataset.team,10) !== teamIdx));
+
+          // habilitar opciones que aún no fueron usadas
+          optionEls.forEach(op => {
+            const idx = parseInt(op.dataset.idx, 10);
+            if(lastQuestionState.disabledOptionIdxs.has(idx)){
+              op.classList.add('disabled');
+            } else {
+              op.classList.remove('disabled');
+            }
+            // los opciones habilitadas responderán al click
+            op.onclick = async () => {
+              if(op.classList.contains('disabled')) return;
+              await processTeamAnswer(q, teamIdx, idx);
+            };
+          });
         });
       });
 
-      document.getElementById('showOptionsBtn').addEventListener('click', ()=>{
-        if(optionsShown) return;
-        optionsShown = true;
-        setTimeout(()=> showQuestionModal(q, { optionsShown, failedTeams }), 150);
-      });
-
-      document.getElementById('showAnswerBtn').addEventListener('click', async ()=>{
-        await revealAnswer(q, null, false);
-      });
+      // Caso: si solo queda 1 equipo, activamos opciones sin necesidad de click en equipo
+      if(!showTeamButtons && remainingTeams.length === 1){
+        const onlyTeam = remainingTeams[0];
+        lastQuestionState.activeTeam = onlyTeam;
+        // habilitar opciones que aún no fueron usadas
+        optionEls.forEach(op => {
+          const idx = parseInt(op.dataset.idx, 10);
+          if(lastQuestionState.disabledOptionIdxs.has(idx)){
+            op.classList.add('disabled');
+          } else {
+            op.classList.remove('disabled');
+            op.onclick = async () => {
+              await processTeamAnswer(q, onlyTeam, idx);
+            };
+          }
+        });
+      }
     }
   });
+
+  // si el modal se cerró por X, swal returns and we paused above.
 }
 
-// --- Manejo de respuesta de equipo ---
-async function showTeamAnswer(q, teamIdx, optionsShown, failedTeams){
-  const res = await Swal.fire({
-    title: `${teams[teamIdx].name} quiere responder`,
-    text: `¿Respondió correctamente?`,
-    icon:'question',
-    showCancelButton:true,
-    confirmButtonText:'Sí (acertó)',
-    cancelButtonText:'No (falló)',
-    allowOutsideClick:false
-  });
+// ----------------- Procesar respuesta del equipo (desde modal) -----------------
+/*
+  q - pregunta
+  teamIdx - índice del equipo que respondió
+  optionIdx - índice de la opción elegida por el moderador
+*/
+async function processTeamAnswer(q, teamIdx, optionIdx){
+  // prevenir doble click si juego pausado
+  if(gamePaused) return;
 
-  if(res.isConfirmed){
-    const multiplier = optionsShown ? 1 : 2;
-    const gained = q.points * multiplier;
-    teams[teamIdx].score += gained;
+  // Si ya estaba deshabilitada la opción (por intentos previos), no hacemos nada
+  if(lastQuestionState.disabledOptionIdxs.has(optionIdx)) return;
+
+  // verificar si es correcta
+  const correctIdx = q.correct;
+  if(optionIdx === correctIdx){
+    // acierto
+    const pts = q.points || 1;
+    teams[teamIdx].score += pts;
     updateScoreboard();
-    lastAnswerShown = { question: q, team: teams[teamIdx].name, gained, correct: q.options[q.correct] };
-    await revealAnswer(q, teams[teamIdx], !optionsShown);
-  } else {
-    failedTeams.push(teamIdx);
-    const stillPossible = teams.some((_, idx)=> !failedTeams.includes(idx));
-    if(stillPossible){
-      document.getElementById('lastAction').innerText = `${teams[teamIdx].name} falló. Otro equipo puede intentar.`;
-      setTimeout(()=> showQuestionModal(q, { optionsShown, failedTeams }), 250);
+    document.getElementById('lastAction').innerText = `${teams[teamIdx].name} acertó y sumó ${pts} pts`;
+
+    // mostrar swal de acierto con opción para siguiente pregunta o cerrar (pausar)
+    const res = await Swal.fire({
+      icon: 'success',
+      title: '¡Correcto!',
+      html: `<div>${teams[teamIdx].name} sumó <strong>${pts} pts</strong></div>`,
+      showCancelButton: true,
+      confirmButtonText: 'Siguiente pregunta',
+      cancelButtonText: 'Cerrar (pausar)',
+      showCloseButton: true
+    });
+
+    if(res.isConfirmed){
+      // continuar automáticamente con siguiente pregunta
+      // limpiamos lastQuestionState
+      lastQuestionState = null;
+      // Mostrar siguiente
+      if(!gamePaused) showNextQuestion();
     } else {
-      await revealAnswer(q, null, false);
+      // pausa el juego (X o cancelar)
+      gamePaused = true;
+      document.getElementById('continueBtn').style.display = 'inline-block';
+      lastQuestionState = null;
+    }
+  } else {
+    // fallo del equipo: marcar equipo como fallado y marcar opción como usada (deshabilitada)
+    lastQuestionState.failedTeams.push(teamIdx);
+    lastQuestionState.disabledOptionIdxs.add(optionIdx);
+    document.getElementById('lastAction').innerText = `${teams[teamIdx].name} falló.`;
+
+    // Si quedan equipos que puedan intentar, reabrimos el mismo modal con el estado actualizado
+    const remaining = teams.map((_,i)=>i).filter(i => !lastQuestionState.failedTeams.includes(i));
+    if(remaining.length === 0){
+      // todos fallaron -> mostramos respuesta correcta y siguiente pregunta
+      await Swal.fire({
+        icon:'info',
+        title: 'Todos fallaron',
+        html:`La respuesta correcta era: <strong>${escapeHtml(q.options[q.correct])}</strong>`,
+        confirmButtonText: 'Siguiente pregunta',
+        showCloseButton: true
+      });
+      lastQuestionState = null;
+      if(!gamePaused) showNextQuestion();
+      return;
+    } else {
+      // Reabrimos modal con las opciones inhabilitadas (excepto que el moderador vuelva a elegir equipo)
+      // re-render en pantalla principal
+      renderQuestionCard(q, lastQuestionState.disabledOptionIdxs);
+      // reabrir modal si no pausa
+      if(!gamePaused){
+        // pequeño delay para evitar apilar swals
+        setTimeout(()=> showQuestionModal(q, lastQuestionState.failedTeams, lastQuestionState.disabledOptionIdxs), 350);
+      } else {
+        // si se pausó, mostramos continuar
+        document.getElementById('continueBtn').style.display = 'inline-block';
+      }
     }
   }
 }
 
-// --- Mostrar respuesta ---
-function revealAnswer(q, teamObj, wasWithoutOptions){
-  return new Promise(resolve=>{
-    const answerText = q.options[q.correct];
-    const pointsText = teamObj ? `+${ (wasWithoutOptions ? q.points*2 : q.points) } pts para ${teamObj.name}` : '';
-    Swal.fire({
-      title:'Respuesta correcta',
-      html:`<div>${answerText}</div><div class="small-muted mt-1">${pointsText}</div>`,
-      icon:'info'
-    }).then(()=> resolve());
-  });
+// ----------------- Helpers -----------------
+function escapeHtml(str){
+  if(!str) return '';
+  return String(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
-
-// --- Botón siguiente pregunta ---
-document.getElementById('nextQuestionBtn').addEventListener('click', ()=>{
-  const q = pickQuestion();
-  showQuestionModal(q);
-});
-
-// --- Inicio ---
-askNumberOfTeams();
