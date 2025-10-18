@@ -202,6 +202,9 @@ async function showQuestionModal(q, failedTeams = [], disabledOptionIdxs = new S
   // Construimos el modal
   const swalHtml = `
     <div style="text-align:left">
+    ${q.image ? `<div style="text-align:center;margin-bottom:20px;">
+      <img src="${q.image}" alt="question image" style="max-width:250px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.15);" />
+    </div>` : ''}
       <div style="font-weight:800;margin-bottom:30px;color:#3b115c ">${escapeHtml(q.question)}</div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">${optionsHtml}</div>
       <div style="margin-top:100px;display: flex;justify-content: center"">${teamButtonsHtml}</div>
