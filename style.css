@@ -19,6 +19,14 @@
   --radius: 12px;
   --swal-font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial;
+
+    /*SAMPLES*/
+    /* CSS HEX */
+--ecru: #CEB876ff;
+--jasmine: #FBDF7Fff;
+--ivory: #FDFDEFff;
+--salmon: #FE7A68ff;
+--sage: #AFBE90ff;
 }
 
 /* global */
@@ -30,12 +38,56 @@ body {
   background-size: 53px 53px;
   margin: 0;
   font-family: var(--swal-font);
-  color: #313133;
+  color: #6b21a8;
+}
+/* ---------- Botón START estilo arcade pastel ---------- */
+#startGameBtn {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #6b21a8;
+  background: linear-gradient(180deg, #e0caff 0%, #d3b8ff 100%);;
+  border: none;
+  border-radius: 50px;
+  padding: 16px 40px;
+  cursor: pointer;
+  box-shadow: 0 8px 0 rgba(0,0,0,0.2), 0 12px 24px rgba(0,0,0,0.25);
+  transition: all 0.15s ease-in-out;
+}
+
+/* Hover */
+#startGameBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 0 rgba(0,0,0,0.25), 0 16px 32px rgba(0,0,0,0.3);
+  filter: brightness(1.05);
+}
+
+/* Active (click) */
+#startGameBtn:active {
+  transform: translateY(4px);
+  box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 8px 16px rgba(0,0,0,0.25);
+  filter: brightness(0.95);
+}
+
+/* Opcional: efecto de resplandor suave */
+#startGameBtn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120%;
+  height: 120%;
+  transform: translate(-50%, -50%);
+  border-radius: 50px;
+  filter: blur(12px);
+  z-index: -1;
 }
 
 /* Arcade fullscreen */
 .fullscreen-center {
-  background: var(--bg-dark);
+  /* background: var(--bg-dark); */
   position: fixed;
   inset: 0;
   display: flex;
@@ -51,9 +103,10 @@ body {
 .arcade-title {
   font-weight: 800;
   font-size: 48px;
+  color: #6b21a8;
   letter-spacing: 2px;
   text-transform: uppercase;
-  text-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 6px 6px rgba(0, 0, 0, 0.2);
 }
 
 /* arcade buttons */
@@ -84,7 +137,7 @@ body {
 .arcade-btn.selected {
   transform: scale(1.03);
   outline: 6px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.45), 0 30px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.45), 0 10px 20px rgba(0, 0, 0, 0.2);
   text-shadow: 1px 1px black;
 }
 
@@ -103,7 +156,7 @@ body {
 }
 
 /* start button */
-.btn-start {
+/* .btn-start {
   margin-top: 8px;
   padding: 12px 28px;
   background: var(--btn-bg);
@@ -114,7 +167,7 @@ body {
   box-shadow: 0 6px 0 rgba(0,0,0,0.15);
   cursor: pointer;
 }
-.btn-start:active { transform: translateY(4px); background: var(--btn-hover); }
+.btn-start:active { transform: translateY(4px); background: var(--btn-hover); } */
 
 /* modal option style */
 .swal-option {
@@ -124,7 +177,7 @@ body {
   cursor: pointer;
   box-shadow: 0 6px 0 rgba(0, 0, 0, 0.12);
   transition: transform 0.06s ease, opacity 0.12s;
-  background: var(--btn-bg);
+  background:#fef9f9; 
 }
 .swal-option.disabled {
   pointer-events: none;
@@ -152,6 +205,15 @@ body {
   transform: none;
 }
 
+h2{ 
+   color: #6b21a8
+}
+h2#questionText {
+    background-color: #6b21a8;
+    color: #fef9f9;
+    width: 100%;
+    padding: 10px;
+}
 /* scoreboard */
 #scoreboard {
   display: flex;
