@@ -184,7 +184,7 @@ async function showQuestionModal(q, failedTeams = [], disabledOptionIdxs = new S
   // build HTML para swal: pregunta + opciones (como bloques, pero desactivados) + area de botones de equipos (si hay >1)
   const optionsHtml = q.options.map((o, i) => {
     const disabled = disabledOptionIdxs.has(i) ? 'disabled' : '';
-    return `<div class="swal-option ${disabled}" data-idx="${i}" style="background:#f3f4f6;color:#111">${String.fromCharCode(65+i)}. ${o}</div>`;
+    return `<div class="swal-option ${disabled}" data-idx="${i}" style="background:#6b21a8;color:#FDFDEFff">${String.fromCharCode(65+i)}. ${o}</div>`;
   }).join('');
 
   // si solo queda un equipo, no mostramos selector de equipos (se habilitan opciones directamente)
@@ -202,10 +202,10 @@ async function showQuestionModal(q, failedTeams = [], disabledOptionIdxs = new S
   // Construimos el modal
   const swalHtml = `
     <div style="text-align:left">
-      <div style="font-weight:800;margin-bottom:12px">${escapeHtml(q.question)}</div>
+      <div style="font-weight:800;margin-bottom:30px;color:#3b115c ">${escapeHtml(q.question)}</div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">${optionsHtml}</div>
-      <div style="margin-top:16px">${teamButtonsHtml}</div>
-      <div class="mt-3 small text-muted">El moderador selecciona el equipo que levantó la mano. Después selecciona la opción que dijeron.</div>
+      <div style="margin-top:100px;display: flex;justify-content: center"">${teamButtonsHtml}</div>
+    <div class="mt-3 small text-muted">Selecciona el equipo que va a responder. Después selecciona la opción que dijeron.</div>
     </div>
   `;
 
@@ -298,37 +298,41 @@ async function processTeamAnswer(q, teamIdx, optionIdx){
 
   // verificar si es correcta
   const correctIdx = q.correct;
-  if(optionIdx === correctIdx){
-    // acierto
-    const pts = q.points || 1;
-    teams[teamIdx].score += pts;
-    updateScoreboard();
-    document.getElementById('lastAction').innerText = `${teams[teamIdx].name} acertó y sumó ${pts} pts`;
 
-    // mostrar swal de acierto con opción para siguiente pregunta o cerrar (pausar)
-    const res = await Swal.fire({
-      icon: 'success',
-      title: '¡Correcto!',
-      html: `<div>${teams[teamIdx].name} sumó <strong>${pts} pts</strong></div>`,
-      showCancelButton: true,
-      confirmButtonText: 'Siguiente pregunta',
-      cancelButtonText: 'Cerrar (pausar)',
-      showCloseButton: true
-    });
+if(optionIdx === correctIdx){
+  // acierto
+  let pts = q.points || 1;
+  teams[teamIdx].score += pts;
+  updateScoreboard();
+  document.getElementById('lastAction').innerText = `${teams[teamIdx].name} acertó y sumó ${pts} pts`;
 
-    if(res.isConfirmed){
-      // continuar automáticamente con siguiente pregunta
-      // limpiamos lastQuestionState
-      lastQuestionState = null;
-      // Mostrar siguiente
-      if(!gamePaused) showNextQuestion();
-    } else {
-      // pausa el juego (X o cancelar)
-      gamePaused = true;
-      document.getElementById('continueBtn').style.display = 'inline-block';
-      lastQuestionState = null;
-    }
+  // mostrar swal de acierto con opción "Siguiente" o "X2"
+  const res = await Swal.fire({
+    icon: 'success',
+    title: '¡Correcto!',
+    html: `<div>${teams[teamIdx].name} sumó <strong>${pts} pts</strong></div>`,
+    showCancelButton: true,
+    confirmButtonText: 'Siguiente pregunta',
+    cancelButtonText: 'X2',
+    showCloseButton: false  // opcional: quitamos la X original para no confundir
+  });
+
+  if(res.isConfirmed){
+    // continuar con siguiente pregunta
+    lastQuestionState = null;
+    if(!gamePaused) showNextQuestion();
   } else {
+    // duplicar puntos
+    pts *= 2;
+    teams[teamIdx].score += pts; // sumamos de nuevo
+    updateScoreboard();
+    document.getElementById('lastAction').innerText = `${teams[teamIdx].name} duplicó puntos y sumó ${pts} adicionales`;
+
+    // luego continuamos con siguiente pregunta
+    lastQuestionState = null;
+    if(!gamePaused) showNextQuestion();
+  }
+}else {
     // fallo del equipo: marcar equipo como fallado y marcar opción como usada (deshabilitada)
     lastQuestionState.failedTeams.push(teamIdx);
     lastQuestionState.disabledOptionIdxs.add(optionIdx);
