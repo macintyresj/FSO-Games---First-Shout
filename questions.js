@@ -24,8 +24,7 @@ const questions = [
     options: ["Diego Maradona", "Lionel Messi", "Pele", "Cristiano Ronaldo"],
     correct: 1,
     points: 100,
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/8/84/Argentina_national_football_team_2014-05-01_11.jpg",
+    image: "images/camiseta1.png"
   },
   {
     id: 4,
@@ -44,6 +43,7 @@ const questions = [
     image: null,
   },
 ];
+
 
 
 
