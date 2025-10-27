@@ -69,5 +69,8 @@ const questions = [
     { id: 68, question: "¿Qué parte del cuerpo produce la insulina?", options: ["Hígado", "Riñón", "Estómago", "Páncreas"], correct: 3, points: 10000 },
     { id: 69, question: "¿Cuál es el país más pequeño del mundo?", options: [ "Mónaco", "Liechtenstein", "Malta", "Vaticano",], correct: 3, points: 10000 },
     { id: 70, question: "¿Qué elemento de la tabla periódica tiene el símbolo 'Na'?", options: ["Sodio", "Nitrógeno", "Níquel", "Neón"], correct: 0, points: 10000 },
+    { id: 71, question: "¿Cuál es el Deporte favorito de Ayeray?", options: ["Correr", "Yoga", "Nadar", "Andar en bicicleta"], correct: 2, points: 10000 },
+    { id: 72, question: "¿Cuál es el videojuego favorito de Ayeray?", options: ["Assassin's Creed: Revelations", "Assassin's Creed: Brotherhood", "Assassin Creed: Origins", "Assassin's Creed: Odyssey"], correct: 3, points: 15000 },
 ];
+
 
