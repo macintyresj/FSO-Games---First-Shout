@@ -35,7 +35,7 @@ const questions = [
     // { id: 34, question: "Partner contributes property: built-in gain allocated?", options: ["20k", "40k", "60k", "80k"], correct: 1, points: 2000 },
     { id: 35, question: "NOL limitation for Corp tax returns?", options: ["80%", "100%", "Only pre-2018", "Unlimited"], correct: 0, points: 2000 },
     // { id: 36, question: "Section 163(j) business interest: effect of K-1 investment income?", options: ["No impact", "Backed out ATI", "1:1 deduction", "Ignored"], correct: 0, points: 2000 },
-    { id: 37, question: "Can capital gains be US sourced instead of partner?", options: ["Yes", "No"], correct: 0, points: 1000 },
+    // { id: 37, question: "Can capital gains be US sourced instead of partner?", options: ["Yes", "No"], correct: 0, points: 1000 },
     { id: 38, question: "BMC?", options: ["Brand, Marketing & Communications", "Business Management & Compliance", "Budget, Marketing & Costs"], correct: 0, points: 1000 },
     { id: 39, question: "TIM?", options: ["Total Investment Management", "Taxable Income Module", "Treasury Internal Metrics"], correct: 1, points: 1000 },
     { id: 40, question: "CTR?", options: ["Corporate Tax Review", "Capital Transaction Report", "Complex tax reclass"], correct: 2, points: 1000 },
@@ -72,6 +72,7 @@ const questions = [
     { id: 71, question: "¿Cuál es el Deporte favorito de Ayeray?", options: ["Correr", "Yoga", "Nadar", "Andar en bicicleta"], correct: 2, points: 1000 },
     { id: 72, question: "¿Cuál es el videojuego favorito de Ayeray?", options: ["Assassin's Creed: Revelations", "Assassin's Creed: Brotherhood", "Assassin Creed: Origins", "Assassin's Creed: Odyssey"], correct: 3, points: 2000 },
 ];
+
 
 
 
