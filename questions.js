@@ -24,7 +24,7 @@ const questions = [
     { id: 23, question: "PFICs with QEF election, how is income reported?", options: ["Include in Form 8621", "Ignore", "Only in K-3", "None"], correct: 0, points: 1000 },
     { id: 24, question: "IRC §368 requirement for tax-free merger?", options: ["Within 30 days", "Cash for all assets", "Plan of reorganization", "Target dissolved immediately"], correct: 2, points: 1000 },
     { id: 25, question: "EY tool to report personal & family holdings?", options: ["GMS", "TIM", "CTR", "CAM"], correct: 0, points: 1000 },
-    { id: 26, question: "Red flags reviewing Book/Tax Capital accounts?", options: ["Ending book capital mismatch", "Income mismatch", "Both 1 & 2", "None"], correct: 2, points: 1000 },
+    { id: 26, question: "Red flags reviewing Book/Tax Capital accounts?", options: ["Ending book capital mismatch", "Income mismatch", "Both A & B", "None"], correct: 2, points: 1000 },
     { id: 27, question: "Bonus depreciation rate after Jan 19, 2025?", options: ["40%", "60%", "80%", "100%"], correct: 3, points: 2000 },
     { id: 28, question: "Why qualified dividends better than non-qualified?", options: ["Lower tax rate", "Same tax rate", "Higher tax rate", "Exempt"], correct: 0, points: 2000 },
     { id: 29, question: "Cash contribution to foreign partnership, which form & category?", options: ["8865 Cat 3", "8865 Cat 1", "1065", "1120"], correct: 0, points: 2000 },
@@ -72,6 +72,7 @@ const questions = [
     { id: 71, question: "¿Cuál es el Deporte favorito de Ayeray?", options: ["Correr", "Yoga", "Nadar", "Andar en bicicleta"], correct: 2, points: 1000 },
     { id: 72, question: "¿Cuál es el videojuego favorito de Ayeray?", options: ["Assassin's Creed: Revelations", "Assassin's Creed: Brotherhood", "Assassin Creed: Origins", "Assassin's Creed: Odyssey"], correct: 3, points: 2000 },
 ];
+
 
 
 
