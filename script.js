@@ -326,7 +326,7 @@ if(optionIdx === correctIdx){
     if(!gamePaused) showNextQuestion();
   } else {
     // duplicar puntos
-    pts *= 2;
+    pts *= 1;
     teams[teamIdx].score += pts; // sumamos de nuevo
     updateScoreboard();
     document.getElementById('lastAction').innerText = `${teams[teamIdx].name} duplicó puntos y sumó ${pts} adicionales`;
